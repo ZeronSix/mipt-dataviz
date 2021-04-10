@@ -12,6 +12,12 @@ class BinaryTreeNode:
     def right_child(self):
         return self.children[1] if len(self.children) == 2 else None
 
+    def has_one_child(self) -> bool:
+        return len(self.children) == 1
+
+    def has_two_children(self) -> bool:
+        return len(self.children) == 2
+
 
 class BinaryTree:
     def __init__(self, source_graph: Graph, root_id: str):

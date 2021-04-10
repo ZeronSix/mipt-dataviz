@@ -17,28 +17,54 @@ class SubtreeCanvas:
     def aspect_ratio(self) -> float:
         if self.width + self.height == 0:
             return 1
+        elif self.width == 0:
+            return self.height
+        elif self.height == 0:
+            return self.width
         else:
             return self.width / self.height
 
     def horizontal_join(self):
+        if self.root_node.has_one_child():
+            # If we have one child, it is always the left one
+            self.width = 1 + self.left_child_canvas.width
+            self.height = self.left_child_canvas.height
+            self.left_child_canvas_offset = (1, 0)
+            return
+
         self.width = 1 + self.left_child_canvas.width + self.right_child_canvas.width
         self.height = max(1 + self.left_child_canvas.height, self.right_child_canvas.height)
         self.left_child_canvas_offset = (0, 1)
         self.right_child_canvas_offset = (self.left_child_canvas.width + 1, 0)
 
     def vertical_join(self):
+        if self.root_node.has_one_child():
+            # If we have one child, it is always the left one
+            self.width = self.left_child_canvas.width
+            self.height = 1 + self.left_child_canvas.height
+            self.left_child_canvas_offset = (0, 1)
+            return
+
         self.width = max(1 + self.right_child_canvas.width, self.left_child_canvas.width)
         self.height = self.left_child_canvas.height + 1 + self.right_child_canvas.height
         self.left_child_canvas_offset = (0, self.right_child_canvas.height + 1)
         self.right_child_canvas_offset = (1, 0)
 
     @staticmethod
-    def build(node: BinaryTreeNode):
+    def build_from_leaf(node: BinaryTreeNode):
         canvas = SubtreeCanvas()
+        canvas.root_node = node
+        return canvas
 
+    @staticmethod
+    def build(node: BinaryTreeNode):
         if node is None:
-            return canvas
+            return None
 
+        if node.left_child() is None and node.right_child() is None:
+            return SubtreeCanvas.build_from_leaf(node)
+
+        canvas = SubtreeCanvas()
         canvas.root_node = node
         canvas.left_child_canvas = SubtreeCanvas.build(node.left_child())
         canvas.right_child_canvas = SubtreeCanvas.build(node.right_child())
@@ -84,12 +110,12 @@ class HvBinaryTreeDrawer:
             return
 
         self.draw_node(draw, origin_hv)
-        if canvas.left_child_canvas.root_node is not None:
+        if canvas.left_child_canvas is not None:
             left_origin_hv = (
                 origin_hv[0] + canvas.left_child_canvas_offset[0], origin_hv[1] + canvas.left_child_canvas_offset[1])
             self.draw_canvas(canvas.left_child_canvas, draw, left_origin_hv)
             self.draw_edge(draw, origin_hv, left_origin_hv)
-        if canvas.right_child_canvas.root_node is not None:
+        if canvas.right_child_canvas is not None:
             right_origin_hv = (
                 origin_hv[0] + canvas.right_child_canvas_offset[0], origin_hv[1] + canvas.right_child_canvas_offset[1])
             self.draw_canvas(canvas.right_child_canvas, draw, right_origin_hv)
